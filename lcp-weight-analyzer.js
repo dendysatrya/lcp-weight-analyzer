@@ -1,7 +1,8 @@
 (function () {
   const longTasks = [];
   let lastLcpEntry = null;
-  const DEFAULT_CDN_URL = "someurl.soon/lcp-weight-analyzer.js";
+  const DEFAULT_CDN_URL =
+    "https://dendysatrya.github.io/lcp-weight-analyzer/lcp-weight-analyzer.js";
 
   const longTaskObserver = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
