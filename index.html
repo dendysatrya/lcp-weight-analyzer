@@ -373,6 +373,14 @@
           return report;
         };
 
+        const normalizeJsHref = (val) => {
+          if (!val) return "";
+          const trimmed = val.trim();
+          return trimmed.startsWith("javascript:")
+            ? trimmed
+            : "javascript:" + trimmed;
+        };
+
         const refreshBookmarklet = () => {
           const useCdn = sourceSelect?.value === "cdn";
           const scriptUrlOverride = cdnInput?.value?.trim();
@@ -380,9 +388,11 @@
             useCdn,
             scriptUrl: scriptUrlOverride || undefined,
           });
-          if (link) link.href = bm.href;
-          if (input) input.value = bm.href;
-          return bm;
+          const plain = normalizeJsHref(bm.hrefPlain || bm.href);
+          // Use normalized plain version for copy/paste and link display
+          if (link) link.href = plain;
+          if (input) input.value = plain;
+          return { ...bm, hrefPlain: plain, href: bm.href };
         };
 
         if (cdnInput) cdnInput.value = LCPWeightAnalyzer.cdnUrl;
@@ -426,12 +436,12 @@
 
         copyBtn?.addEventListener("click", () => {
           const current = refreshBookmarklet();
-          copyValue(current.href, "Bookmarklet");
+          copyValue(current.hrefPlain || current.href, "Bookmarklet");
         });
 
         copyUrlBtn?.addEventListener("click", () => {
           const current = refreshBookmarklet();
-          copyValue(current.href, "URL");
+          copyValue(current.hrefPlain || current.href, "URL");
         });
 
         sourceSelect?.addEventListener("change", refreshBookmarklet);

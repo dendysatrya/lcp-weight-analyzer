@@ -181,10 +181,35 @@
     )}%"></div>`;
   }
 
+  function ensureStyles() {
+    const STYLE_ID = "lcpwa-style";
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      .lcpwa-card { background:#fff;color:#0f172a;padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+      .lcpwa-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px; }
+      .lcpwa-label { text-transform:uppercase;font-size:12px;letter-spacing:0.05em;color:#64748b; }
+      .lcpwa-value { font-size:32px;font-weight:700; }
+      .lcpwa-chip { background:#e2e8f0;color:#0f172a;padding:6px 10px;border-radius:999px;font-weight:600;font-size:13px; }
+      .lcpwa-bar { display:flex;height:18px;border-radius:12px;overflow:hidden;background:#e2e8f0;margin:6px 0; }
+      .lcpwa-segment { height:100%; }
+      .lcpwa-legend { display:flex;gap:12px;font-size:13px;color:#475569;margin:8px 0 0;flex-wrap:wrap; }
+      .lcpwa-dot { width:12px;height:12px;border-radius:999px;display:inline-block;margin-right:6px; }
+      .lcpwa-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px; }
+      .lcpwa-table { width:100%;border-collapse:collapse;font-size:14px; }
+      .lcpwa-table th, .lcpwa-table td { text-align:left;padding:8px;border-bottom:1px solid #e2e8f0; }
+      .lcpwa-table th { color:#475569;font-weight:600;font-size:13px; }
+      @media (max-width: 720px) { .lcpwa-grid { grid-template-columns:1fr; } .lcpwa-header { flex-direction:column; align-items:flex-start; } }
+    `;
+    document.head.appendChild(style);
+  }
+
   function renderReport(target) {
     const container =
       typeof target === "string" ? document.querySelector(target) : target;
     if (!container) throw new Error("LCPWeightAnalyzer: container not found");
+    ensureStyles();
     const report = computeWeights();
     if (report.error) {
       container.innerHTML = `<div class="lcpwa-card">${report.error}</div>`;
@@ -325,8 +350,11 @@
     const selector = `#${containerId}`;
     const code = `(function(){var sid='${containerId}';var c=document.getElementById(sid);if(!c){c=document.createElement('div');c.id=sid;c.style.position='fixed';c.style.top='12px';c.style.right='12px';c.style.zIndex='2147483647';c.style.background='#fff';c.style.padding='12px';c.style.borderRadius='12px';c.style.boxShadow='0 10px 30px rgba(0,0,0,.2)';c.style.maxWidth='400px';c.style.width='min(90vw,400px)';c.style.maxHeight='90vh';c.style.overflow='auto';c.style.fontFamily='system-ui,-apple-system,"Segoe UI",sans-serif';document.body.appendChild(c);}function run(){if(!window.LCPWeightAnalyzer)return;try{window.LCPWeightAnalyzer.render('${selector}');}catch(e){console.error('LCPWeightAnalyzer render failed',e);}}if(!window.LCPWeightAnalyzer){var s=document.createElement('script');s.src='${scriptUrl}';s.onload=run;document.head.appendChild(s);}else{run();}})();`;
     const minified = code.replace(/\s+/g, " ");
+    const hrefPlain = "javascript:" + minified;
+    const hrefEncoded = "javascript:" + encodeURIComponent(minified);
     return {
-      href: "javascript:" + encodeURIComponent(minified),
+      href: hrefEncoded,
+      hrefPlain,
       raw: minified,
       scriptUrl,
       containerId,
