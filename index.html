@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LCP Weight Analyzer</title>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f4f6fb;
+        color: #0f172a;
+        line-height: 1.5;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+      .page {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .hero {
+        background: #0f172a;
+        color: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .demo-content {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        align-items: center;
+        margin: 24px 0;
+      }
+      .demo-img {
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
+      .demo-img img {
+        width: 100%;
+        border-radius: 8px;
+        display: block;
+      }
+      .demo-text {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
+      .lcpwa-card {
+        background: #fff;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        margin-top: 24px;
+      }
+      .lcpwa-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .lcpwa-label {
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        color: #64748b;
+      }
+      .lcpwa-value {
+        font-size: 32px;
+        font-weight: 700;
+      }
+      .lcpwa-chip {
+        background: #e2e8f0;
+        color: #0f172a;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .lcpwa-bar {
+        display: flex;
+        height: 18px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #e2e8f0;
+      }
+      .lcpwa-segment {
+        height: 100%;
+      }
+      .lcpwa-legend {
+        display: flex;
+        gap: 12px;
+        font-size: 13px;
+        color: #475569;
+        margin: 8px 0 0;
+      }
+      .lcpwa-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .lcpwa-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .lcpwa-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .lcpwa-table th,
+      .lcpwa-table td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .lcpwa-table th {
+        color: #475569;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .info {
+        font-size: 14px;
+        color: #475569;
+        margin-top: 12px;
+      }
+      .toolbox {
+        margin-top: 16px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #0f172a;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        transition: transform 120ms ease, box-shadow 120ms ease,
+          background 120ms ease;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+        background: #172342;
+      }
+      .btn.secondary {
+        background: #e2e8f0;
+        color: #0f172a;
+        box-shadow: none;
+      }
+      .btn.secondary:hover {
+        background: #cbd5e1;
+      }
+      .btn.ghost {
+        background: transparent;
+        color: #0f172a;
+        box-shadow: none;
+        padding: 8px 10px;
+      }
+      .bookmarklet-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .bookmarklet-input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 13px;
+        background: #f8fafc;
+      }
+      .label {
+        font-size: 13px;
+        color: #475569;
+        display: block;
+        margin: 8px 0 4px;
+      }
+      .bookmarklet-link {
+        color: #0f172a;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+      }
+      .select {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .bookmarklet-link:hover {
+        background: #e2e8f0;
+      }
+      .status {
+        font-size: 13px;
+        color: #0f172a;
+        min-height: 18px;
+        margin-top: 6px;
+      }
+      @media (max-width: 720px) {
+        .demo-content {
+          grid-template-columns: 1fr;
+        }
+        .lcpwa-grid {
+          grid-template-columns: 1fr;
+        }
+        .bookmarklet-row {
+          grid-template-columns: 1fr;
+        }
+        body {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="hero">
+        <h1>LCP Weight Analyzer</h1>
+        <p>
+          Understand what slows down your Largest Contentful Paint: network, JS
+          blocking, render delay, or idle gaps.
+        </p>
+      </div>
+
+      <div class="demo-content">
+        <div class="demo-img">
+          <img
+            id="hero-img"
+            src="https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=900&q=80"
+            alt="Scenic"
+            loading="eager"
+          />
+        </div>
+        <div class="demo-text">
+          <h3>Demo page content</h3>
+          <p>
+            This image is intentionally large to act as the LCP element. Open
+            DevTools → Performance to compare with the analyzer below.
+          </p>
+          <p>
+            <strong>Try this:</strong> Reload the page; the analyzer will
+            compute once the LCP is known. Simulate slow 3G in DevTools to see
+            the bars shift toward Network.
+          </p>
+        </div>
+      </div>
+
+      <div id="report"></div>
+
+      <div class="lcpwa-card toolbox">
+        <div class="actions">
+          <button class="btn" id="export-json">Export JSON</button>
+          <button class="btn secondary" id="copy-bookmarklet">
+            Copy bookmarklet
+          </button>
+          <a
+            id="bookmarklet-link"
+            class="bookmarklet-link"
+            href="#"
+            title="Drag to your bookmarks bar"
+            >Drag bookmarklet</a
+          >
+        </div>
+        <label class="label" for="bookmarklet-source">Script source</label>
+        <div class="bookmarklet-row" style="grid-template-columns: 1fr 1fr">
+          <select id="bookmarklet-source" class="select">
+            <option value="auto">Auto (this origin)</option>
+            <option value="cdn">CDN (jsDelivr)</option>
+          </select>
+          <button class="btn ghost" id="refresh-bookmarklet">
+            Refresh link
+          </button>
+        </div>
+        <label class="label" for="cdn-url">CDN URL (override)</label>
+        <div class="bookmarklet-row">
+          <input id="cdn-url" class="bookmarklet-input" />
+        </div>
+        <label class="label" for="bookmarklet-input"
+          >Bookmarklet URL (drag or copy)</label
+        >
+        <div class="bookmarklet-row">
+          <input id="bookmarklet-input" class="bookmarklet-input" readonly />
+          <button class="btn ghost" id="copy-bookmarklet-url">Copy URL</button>
+        </div>
+        <div class="status" id="action-status" aria-live="polite"></div>
+      </div>
+
+      <div class="info">
+        <strong>How it works:</strong> The script observes LCP entries, long
+        tasks, and resource timings. It attributes LCP to network time,
+        main-thread blocking, render delay, and idle. Data stays in-page; no
+        backend.
+      </div>
+    </div>
+
+    <script src="./lcp-weight-analyzer.js"></script>
+    <script>
+      window.addEventListener("load", () => {
+        const ric =
+          window.requestIdleCallback ||
+          function (cb) {
+            return setTimeout(
+              () => cb({ didTimeout: false, timeRemaining: () => 0 }),
+              300
+            );
+          };
+        // Give the browser a moment to finalize LCP (accounts for late entries)
+        ric(
+          () => {
+            LCPWeightAnalyzer.render("#report");
+            setupActions();
+          },
+          { timeout: 2000 }
+        );
+      });
+
+      function setupActions() {
+        const exportBtn = document.getElementById("export-json");
+        const copyBtn = document.getElementById("copy-bookmarklet");
+        const copyUrlBtn = document.getElementById("copy-bookmarklet-url");
+        const link = document.getElementById("bookmarklet-link");
+        const input = document.getElementById("bookmarklet-input");
+        const status = document.getElementById("action-status");
+        const sourceSelect = document.getElementById("bookmarklet-source");
+        const refreshBtn = document.getElementById("refresh-bookmarklet");
+        const cdnInput = document.getElementById("cdn-url");
+
+        const setStatus = (msg) => {
+          if (status) status.textContent = msg || "";
+        };
+
+        const ensureReport = () => {
+          const report = LCPWeightAnalyzer.getReport();
+          if (report?.error) {
+            setStatus(report.error);
+            return null;
+          }
+          return report;
+        };
+
+        const refreshBookmarklet = () => {
+          const useCdn = sourceSelect?.value === "cdn";
+          const scriptUrlOverride = cdnInput?.value?.trim();
+          const bm = LCPWeightAnalyzer.createBookmarklet({
+            useCdn,
+            scriptUrl: scriptUrlOverride || undefined,
+          });
+          if (link) link.href = bm.href;
+          if (input) input.value = bm.href;
+          return bm;
+        };
+
+        if (cdnInput) cdnInput.value = LCPWeightAnalyzer.cdnUrl;
+        const bm = refreshBookmarklet();
+        setStatus(
+          "Bookmarklet ready. Drag the link or copy it. CDN toggle supported."
+        );
+
+        exportBtn?.addEventListener("click", () => {
+          const report = ensureReport();
+          if (!report) return;
+          const result = LCPWeightAnalyzer.exportJson(
+            "lcp-report.json",
+            report
+          );
+          if (result?.error) {
+            setStatus(result.error);
+            return;
+          }
+          setStatus("Exported lcp-report.json");
+        });
+
+        const copyValue = async (value, label) => {
+          try {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(value);
+              setStatus(label + " copied");
+            } else {
+              const temp = document.createElement("textarea");
+              temp.value = value;
+              document.body.appendChild(temp);
+              temp.select();
+              document.execCommand("copy");
+              temp.remove();
+              setStatus(label + " copied");
+            }
+          } catch (e) {
+            setStatus("Copy failed: " + e.message);
+          }
+        };
+
+        copyBtn?.addEventListener("click", () => {
+          const current = refreshBookmarklet();
+          copyValue(current.href, "Bookmarklet");
+        });
+
+        copyUrlBtn?.addEventListener("click", () => {
+          const current = refreshBookmarklet();
+          copyValue(current.href, "URL");
+        });
+
+        sourceSelect?.addEventListener("change", refreshBookmarklet);
+        refreshBtn?.addEventListener("click", () => {
+          const current = refreshBookmarklet();
+          setStatus(
+            `Bookmarklet refreshed (${
+              sourceSelect?.value === "cdn" ? "CDN" : "auto"
+            })`
+          );
+          if (cdnInput && sourceSelect?.value === "cdn") {
+            setStatus(
+              `Using CDN: ${cdnInput.value || LCPWeightAnalyzer.cdnUrl}`
+            );
+          }
+        });
+
+        cdnInput?.addEventListener("change", () => {
+          sourceSelect.value = "cdn";
+          refreshBookmarklet();
+          setStatus(`Using CDN: ${cdnInput.value}`);
+        });
+
+        // Refresh link on visibility change to pick up new origin if needed
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") refreshBookmarklet();
+        });
+      }
+    </script>
+  </body>
+</html>
